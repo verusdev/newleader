@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'SaaS Platform')</title>
+    <title>@yield('title', 'Event CRM')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -25,8 +25,8 @@
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <a class="nav-link" href="#" role="button">
-                    <i class="fas fa-user-circle"></i> {{ tenant('name') ?? 'Tenant' }}
+                <a class="nav-link" href="#">
+                    <i class="fas fa-user-circle"></i> {{ tenant('name') ?? 'Event CRM' }}
                 </a>
             </li>
         </ul>
@@ -34,7 +34,7 @@
 
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="{{ route('tenant.dashboard') }}" class="brand-link">
-            <span class="brand-text font-weight-light">{{ tenant('name') ?? 'My Shop' }}</span>
+            <span class="brand-text font-weight-light">{{ tenant('name') ?? 'Event CRM' }}</span>
         </a>
 
         <nav class="mt-2">
@@ -46,15 +46,21 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('tenant.products.index') }}" class="nav-link {{ request()->routeIs('tenant.products.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-box"></i>
-                        <p>Товары</p>
+                    <a href="{{ route('tenant.events.index') }}" class="nav-link {{ request()->routeIs('tenant.events.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-calendar-alt"></i>
+                        <p>Мероприятия</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('tenant.orders.index') }}" class="nav-link {{ request()->routeIs('tenant.orders.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-shopping-cart"></i>
-                        <p>Заказы</p>
+                    <a href="{{ route('tenant.clients.index') }}" class="nav-link {{ request()->routeIs('tenant.clients.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>Клиенты</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('tenant.vendors.index') }}" class="nav-link {{ request()->routeIs('tenant.vendors.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-briefcase"></i>
+                        <p>Подрядчики</p>
                     </a>
                 </li>
             </ul>
@@ -102,7 +108,7 @@
     </div>
 
     <footer class="main-footer">
-        <strong>Copyright &copy; {{ date('Y') }} <a href="#">SaaS Platform</a>.</strong>
+        <strong>Copyright &copy; {{ date('Y') }} <a href="#">Event CRM</a>.</strong>
         <span class="float-right d-none d-sm-inline">Version 1.0.0</span>
     </footer>
 

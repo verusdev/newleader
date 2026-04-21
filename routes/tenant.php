@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Http\Controllers\Tenant\DashboardController;
-use App\Http\Controllers\Tenant\ProductController;
-use App\Http\Controllers\Tenant\OrderController;
-use App\Http\Controllers\Tenant\PaymentController;
+use App\Http\Controllers\Tenant\EventController;
+use App\Http\Controllers\Tenant\ClientController;
+use App\Http\Controllers\Tenant\GuestController;
+use App\Http\Controllers\Tenant\TaskController;
+use App\Http\Controllers\Tenant\BudgetController;
+use App\Http\Controllers\Tenant\VendorController;
 
 Route::middleware([
     'web',
@@ -17,17 +20,22 @@ Route::middleware([
 ])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('tenant.dashboard');
 
-    Route::resource('products', ProductController::class);
+    Route::resource('events', EventController::class);
 
-    Route::prefix('orders')->name('tenant.orders.')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])->name('index');
-        Route::get('/create', [OrderController::class, 'create'])->name('create');
-        Route::post('/', [OrderController::class, 'store'])->name('store');
-        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-        Route::post('/{order}/pay', [OrderController::class, 'pay'])->name('pay');
-        Route::get('/{order}/payment/callback', [OrderController::class, 'paymentCallback'])->name('payment.callback');
-        Route::patch('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
+    Route::resource('clients', ClientController::class);
+
+    Route::prefix('events/{event}')->name('tenant.')->group(function () {
+        Route::resource('guests', GuestController::class)->except(['index', 'show']);
+        Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::post('guests/{guest}/toggle', [GuestController::class, 'toggleConfirm'])->name('guests.toggle');
+
+        Route::resource('tasks', TaskController::class)->except(['index', 'show']);
+        Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index');
+        Route::post('tasks/{task}/toggle', [TaskController::class, 'toggleStatus'])->name('tasks.toggle');
+
+        Route::resource('budget', BudgetController::class)->except(['index', 'show']);
+        Route::get('budget', [BudgetController::class, 'index'])->name('budget.index');
     });
 
-    Route::post('/webhooks/yookassa', [PaymentController::class, 'webhook'])->name('webhooks.yookassa');
+    Route::resource('vendors', VendorController::class);
 });
