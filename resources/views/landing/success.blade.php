@@ -3,28 +3,32 @@
 @section('title', 'Оплата успешна!')
 
 @section('content')
-    <div class="py-20">
-        <div class="max-w-md mx-auto px-4 text-center">
-            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                    </div>
+                    <h2 class="mb-3">Оплата успешна!</h2>
+                    <p class="text-muted mb-4">Ваша подписка активирована.</p>
+                    <div class="alert alert-info">
+                        <p class="mb-2">Ваш магазин доступен по адресу:</p>
+                        <a href="http://{{ $subscription->tenant_domain }}.localhost:8000" class="h5">
+                            http://{{ $subscription->tenant_domain }}.localhost:8000
+                        </a>
+                    </div>
+                    <div class="alert alert-warning text-left">
+                        <p class="mb-1"><strong>Не забудьте добавить запись в hosts файл:</strong></p>
+                        <code>127.0.0.1 {{ $subscription->tenant_domain }}.localhost</code>
+                    </div>
+                    <a href="http://{{ $subscription->tenant_domain }}.localhost:8000" class="btn btn-primary btn-lg mt-3">
+                        <i class="fas fa-store mr-2"></i>Перейти в магазин
+                    </a>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">Оплата успешна!</h1>
-            <p class="text-gray-600 mb-8">
-                Ваша подписка активирована. Магазин создан по адресу:
-                <br>
-                <a href="http://{{ $subscription->tenant_domain }}:8000" class="text-blue-600 font-bold hover:underline">
-                    http://{{ $subscription->tenant_domain }}.localhost:8000
-                </a>
-            </p>
-            <div class="bg-gray-50 rounded-lg p-4 mb-8 text-left">
-                <p class="text-sm text-gray-500">Не забудьте добавить запись в hosts файл:</p>
-                <code class="text-sm bg-gray-200 px-2 py-1 rounded">127.0.0.1 {{ $subscription->tenant_domain }}.localhost</code>
-            </div>
-            <a href="http://{{ $subscription->tenant_domain }}:8000" class="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition">
-                Перейти в магазин
-            </a>
         </div>
     </div>
+</div>
 @endsection

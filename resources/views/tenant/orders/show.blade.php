@@ -1,132 +1,157 @@
 @extends('layouts.app')
 
 @section('title', 'Заказ #' . $order->id)
-@section('nav-title', tenant('name') ?? 'Tenant')
-
-@section('nav-links')
-    <a href="{{ route('tenant.dashboard') }}" class="text-gray-600 hover:text-gray-900">Главная</a>
-    <a href="{{ route('tenant.products.index') }}" class="text-gray-600 hover:text-gray-900">Товары</a>
-    <a href="{{ route('tenant.orders.index') }}" class="text-gray-600 hover:text-gray-900">Заказы</a>
-@endsection
+@section('page-title', 'Заказ #' . $order->id)
 
 @section('content')
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Заказ #{{ $order->id }}</h1>
-            <a href="{{ route('tenant.orders.index') }}" class="text-gray-600 hover:text-gray-900">← Назад к списку</a>
-        </div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-user mr-2"></i>Информация о клиенте</h3>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">ФИО</dt>
+                    <dd class="col-sm-8">{{ $order->customer_name }}</dd>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-semibold mb-4">Информация о клиенте</h2>
-                <dl class="space-y-2">
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">ФИО</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ $order->customer_name }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">Email</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ $order->customer_email }}</dd>
-                    </div>
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ $order->customer_email }}</dd>
+
                     @if($order->customer_phone)
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500">Телефон</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ $order->customer_phone }}</dd>
-                        </div>
+                        <dt class="col-sm-4">Телефон</dt>
+                        <dd class="col-sm-8">{{ $order->customer_phone }}</dd>
                     @endif
                 </dl>
             </div>
+        </div>
+    </div>
 
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-semibold mb-4">Статус заказа</h2>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-tasks mr-2"></i>Статус заказа</h3>
+            </div>
+            <div class="card-body">
                 <form action="{{ route('tenant.orders.update-status', $order) }}" method="POST">
                     @csrf
                     @method('PATCH')
-                    <select name="status" class="shadow border rounded w-full py-2 px-3 text-gray-700 mb-3" onchange="this.form.submit()">
-                        <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Ожидание</option>
-                        <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>В обработке</option>
-                        <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Отправлен</option>
-                        <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Доставлен</option>
-                        <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Отменён</option>
-                    </select>
+                    <div class="form-group">
+                        <label>Изменить статус</label>
+                        <select name="status" class="form-control" onchange="this.form.submit()">
+                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Ожидание</option>
+                            <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>В обработке</option>
+                            <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Отправлен</option>
+                            <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Доставлен</option>
+                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Отменён</option>
+                        </select>
+                    </div>
                 </form>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Оплата</dt>
-                    <dd class="mt-1">
-                        @if($order->payment_status === 'paid')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Оплачен</span>
-                        @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Не оплачен</span>
-                            @if($order->payment_status === 'unpaid')
-                                <form action="{{ route('tenant.orders.pay', $order) }}" method="POST" class="mt-2">
-                                    @csrf
-                                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded">
-                                        Оплатить через ЮKassa
-                                    </button>
-                                </form>
-                            @endif
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Оплата:</span>
+                    @if($order->payment_status === 'paid')
+                        <span class="badge badge-success badge-lg">Оплачен</span>
+                    @else
+                        <span class="badge badge-danger badge-lg">Не оплачен</span>
+                        @if($order->payment_status === 'unpaid')
+                            <form action="{{ route('tenant.orders.pay', $order) }}" method="POST" class="ml-3">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-credit-card mr-1"></i>Оплатить через ЮKassa
+                                </button>
+                            </form>
                         @endif
-                    </dd>
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold mb-4">Товары в заказе</h2>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Товар</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($order->items as $item)
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-box mr-2"></i>Товары в заказе</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td class="px-4 py-2">{{ $item['product_name'] }}</td>
-                            <td class="px-4 py-2">{{ number_format($item['price'], 2) }} ₽</td>
-                            <td class="px-4 py-2">{{ $item['quantity'] }}</td>
-                            <td class="px-4 py-2">{{ number_format($item['subtotal'], 2) }} ₽</td>
-                        </tr>
-                    @endforeach
-                    <tr>
-                        <td colspan="3" class="px-4 py-2 text-right font-bold">Итого:</td>
-                        <td class="px-4 py-2 font-bold">{{ number_format($order->total_amount, 2) }} ₽</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        @if($order->payments->count() > 0)
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-semibold mb-4">Платежи</h2>
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Метод</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                            <th>Товар</th>
+                            <th>Цена</th>
+                            <th>Кол-во</th>
+                            <th>Сумма</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($order->payments as $payment)
+                    <tbody>
+                        @foreach($order->items as $item)
                             <tr>
-                                <td class="px-4 py-2">{{ $payment->yookassa_payment_id ?? 'N/A' }}</td>
-                                <td class="px-4 py-2">{{ $payment->payment_method }}</td>
-                                <td class="px-4 py-2">{{ number_format($payment->amount, 2) }} ₽</td>
-                                <td class="px-4 py-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $payment->status === 'succeeded' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                <td>{{ $item['product_name'] }}</td>
+                                <td>{{ number_format($item['price'], 2) }} ₽</td>
+                                <td>{{ $item['quantity'] }}</td>
+                                <td>{{ number_format($item['subtotal'], 2) }} ₽</td>
+                            </tr>
+                        @endforeach
+                        <tr>
+                            <td colspan="3" class="text-right font-weight-bold">Итого:</td>
+                            <td class="font-weight-bold">{{ number_format($order->total_amount, 2) }} ₽</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>Платежи</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Метод</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($order->payments as $payment)
+                            <tr>
+                                <td>{{ $payment->yookassa_payment_id ?? 'N/A' }}</td>
+                                <td>{{ $payment->payment_method }}</td>
+                                <td>{{ number_format($payment->amount, 2) }} ₽</td>
+                                <td>
+                                    <span class="badge {{ $payment->status === 'succeeded' ? 'badge-success' : 'badge-warning' }}">
                                         {{ $payment->status }}
                                     </span>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Платежи не найдены</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
-        @endif
+        </div>
     </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="{{ route('tenant.orders.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-1"></i> Назад к списку
+        </a>
+    </div>
+</div>
 @endsection

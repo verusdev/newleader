@@ -1,54 +1,50 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Тенант: ' . $tenant->name)
-@section('nav-title', 'Admin Panel')
-
-@section('nav-links')
-    <a href="{{ route('admin.tenants.index') }}" class="text-gray-600 hover:text-gray-900">Тенанты</a>
-@endsection
+@section('page-title', 'Тенант: ' . $tenant->name)
 
 @section('content')
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Тенант: {{ $tenant->name }}</h1>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Информация</h3>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">ID</dt>
+                    <dd class="col-sm-8">{{ $tenant->id }}</dd>
 
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <dl class="grid grid-cols-2 gap-4">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $tenant->id }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Email</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $tenant->email }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Создан</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $tenant->created_at->format('d.m.Y H:i') }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Домены</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
+                    <dt class="col-sm-4">Название</dt>
+                    <dd class="col-sm-8">{{ $tenant->name }}</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ $tenant->email }}</dd>
+
+                    <dt class="col-sm-4">Создан</dt>
+                    <dd class="col-sm-8">{{ $tenant->created_at->format('d.m.Y H:i') }}</dd>
+
+                    <dt class="col-sm-4">Домены</dt>
+                    <dd class="col-sm-8">
                         @foreach($tenant->domains as $domain)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1">
-                                {{ $domain->domain }}
-                            </span>
+                            <span class="badge badge-info">{{ $domain->domain }}</span>
                         @endforeach
                     </dd>
-                </div>
-            </dl>
-        </div>
-
-        <div class="flex space-x-4">
-            <a href="{{ route('admin.tenants.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                Назад к списку
-            </a>
-            <form action="{{ route('admin.tenants.destroy', $tenant) }}" method="POST" onsubmit="return confirm('Удалить тенанта?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                    Удалить
-                </button>
-            </form>
+                </dl>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ route('admin.tenants.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Назад
+                </a>
+                <form action="{{ route('admin.tenants.destroy', $tenant) }}" method="POST" onsubmit="return confirm('Удалить тенанта?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-1"></i> Удалить
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 @endsection

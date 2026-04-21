@@ -1,65 +1,69 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Управление тенантами')
-@section('nav-title', 'Admin Panel')
-
-@section('nav-links')
-    <a href="{{ route('admin.tenants.index') }}" class="text-gray-600 hover:text-gray-900">Тенанты</a>
-@endsection
+@section('page-title', 'Тенанты')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Тенанты</h1>
-        <a href="{{ route('admin.tenants.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            + Новый тенант
-        </a>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-building mr-2"></i>Список тенантов</h3>
+                <div class="card-tools">
+                    <a href="{{ route('admin.tenants.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-1"></i>Новый тенант
+                    </a>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover table-head-fixed">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Email</th>
+                            <th>Домены</th>
+                            <th>Создан</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($tenants as $tenant)
+                            <tr>
+                                <td>{{ $tenant->id }}</td>
+                                <td>{{ $tenant->name }}</td>
+                                <td>{{ $tenant->email }}</td>
+                                <td>
+                                    @foreach($tenant->domains as $domain)
+                                        <span class="badge badge-info">{{ $domain->domain }}</span>
+                                    @endforeach
+                                </td>
+                                <td>{{ $tenant->created_at->format('d.m.Y H:i') }}</td>
+                                <td>
+                                    <a href="{{ route('admin.tenants.show', $tenant) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <form action="{{ route('admin.tenants.destroy', $tenant) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить тенанта?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Тенанты не найдены</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                {{ $tenants->links() }}
+            </div>
+        </div>
     </div>
-
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Домены</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Создан</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($tenants as $tenant)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $tenant->id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $tenant->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $tenant->email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @foreach($tenant->domains as $domain)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $domain->domain }}
-                                </span>
-                            @endforeach
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $tenant->created_at->format('d.m.Y') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('admin.tenants.show', $tenant) }}" class="text-blue-600 hover:text-blue-900 mr-3">Просмотр</a>
-                            <form action="{{ route('admin.tenants.destroy', $tenant) }}" method="POST" class="inline" onsubmit="return confirm('Удалить тенанта?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-900">Удалить</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">Тенанты не найдены</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-4">
-        {{ $tenants->links() }}
-    </div>
+</div>
 @endsection

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'SaaS Platform')</title>
+    <title>@yield('title', 'Admin Panel')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -20,41 +20,33 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{{ route('tenant.dashboard') }}" class="nav-link">Главная</a>
+                <a href="{{ route('landing.index') }}" class="nav-link">Лендинг</a>
             </li>
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <a class="nav-link" href="#" role="button">
-                    <i class="fas fa-user-circle"></i> {{ tenant('name') ?? 'Tenant' }}
-                </a>
+                <a class="nav-link" href="#"><i class="fas fa-user-shield"></i> Админ</a>
             </li>
         </ul>
     </nav>
 
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="{{ route('tenant.dashboard') }}" class="brand-link">
-            <span class="brand-text font-weight-light">{{ tenant('name') ?? 'My Shop' }}</span>
+        <a href="{{ route('admin.tenants.index') }}" class="brand-link">
+            <span class="brand-text font-weight-light">Admin Panel</span>
         </a>
 
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                 <li class="nav-item">
-                    <a href="{{ route('tenant.dashboard') }}" class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>Панель управления</p>
+                    <a href="{{ route('admin.tenants.index') }}" class="nav-link {{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-building"></i>
+                        <p>Тенанты</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('tenant.products.index') }}" class="nav-link {{ request()->routeIs('tenant.products.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-box"></i>
-                        <p>Товары</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('tenant.orders.index') }}" class="nav-link {{ request()->routeIs('tenant.orders.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-shopping-cart"></i>
-                        <p>Заказы</p>
+                    <a href="{{ route('landing.index') }}" class="nav-link">
+                        <i class="nav-icon fas fa-home"></i>
+                        <p>На лендинг</p>
                     </a>
                 </li>
             </ul>
@@ -66,7 +58,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0">@yield('page-title')</h1>
+                        <h1 class="m-0">@yield('page-title', 'Админ-панель')</h1>
                     </div>
                 </div>
             </div>
@@ -77,12 +69,6 @@
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                     </div>
                 @endif
@@ -103,7 +89,7 @@
 
     <footer class="main-footer">
         <strong>Copyright &copy; {{ date('Y') }} <a href="#">SaaS Platform</a>.</strong>
-        <span class="float-right d-none d-sm-inline">Version 1.0.0</span>
+        <span class="float-right d-none d-sm-inline">Admin Panel</span>
     </footer>
 
 </div>
