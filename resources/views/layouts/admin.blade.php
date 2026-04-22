@@ -44,6 +44,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-crown"></i>
+                        <p>Подписки</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('landing.index') }}" class="nav-link">
                         <i class="nav-icon fas fa-home"></i>
                         <p>На лендинг</p>

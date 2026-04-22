@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Central\TenantController;
-use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
+use App\Http\Controllers\Central\SubscriptionController;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing.index');
@@ -19,6 +20,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
     Route::get('/tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
     Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::post('/subscriptions/{subscription}/mark-as-paid', [SubscriptionController::class, 'markAsPaid'])->name('subscriptions.mark-as-paid');
+    Route::post('/subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
 });
 
-Route::post('/webhooks/yookassa', [TenantPaymentController::class, 'webhook'])->name('webhooks.yookassa');
+Route::post('/webhooks/yookassa', function () {
+    $service = new SubscriptionService();
+    $service->handleWebhook(request()->all());
+    return response('OK', 200);
+})->name('webhooks.yookassa');

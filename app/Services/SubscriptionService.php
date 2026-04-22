@@ -2,13 +2,12 @@
 
 namespace App\Services;
 
+use YooKassa\Client;
 use App\Models\Subscription;
 use App\Models\CentralPayment;
 use App\Models\CentralSubscriptionPlan;
 use Stancl\Tenancy\Database\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
-use YooKassa\Client;
-use YooKassa\Configuration;
 use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
@@ -20,12 +19,7 @@ class SubscriptionService
         $shopId = config('services.yookassa.shop_id');
         $secretKey = config('services.yookassa.secret_key');
 
-        Configuration::configure(
-            shopId: $shopId,
-            secretKey: $secretKey
-        );
-
-        $this->client = new Client();
+        $this->client = new Client($shopId, $secretKey);
     }
 
     public function createSubscriptionPayment(Subscription $subscription, string $returnUrl): ?array
@@ -121,7 +115,7 @@ class SubscriptionService
         }
     }
 
-    protected function createTenant(Subscription $subscription): Tenant
+    public function createTenant(Subscription $subscription): Tenant
     {
         $tenant = Tenant::create([
             'name' => $subscription->name,

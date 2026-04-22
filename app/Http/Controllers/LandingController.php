@@ -39,6 +39,11 @@ class LandingController extends Controller
             'status' => 'pending',
         ]);
 
+        if (config('app.env') === 'local' && config('services.yookassa.shop_id') === 'your_shop_id') {
+            session(['pending_subscription_id' => $subscription->id]);
+            return redirect()->route('landing.subscribe.callback', $subscription)->with('dev-mode', true);
+        }
+
         $returnUrl = route('landing.subscribe.callback', ['subscription' => $subscription]);
 
         $result = $subscriptionService->createSubscriptionPayment($subscription, $returnUrl);
@@ -55,6 +60,24 @@ class LandingController extends Controller
 
     public function subscribeCallback(Subscription $subscription, Request $request, SubscriptionService $subscriptionService)
     {
+        if (config('app.env') === 'local' && config('services.yookassa.shop_id') === 'your_shop_id') {
+            $subscription->status = 'active';
+            $subscription->starts_at = now();
+            $subscription->ends_at = now()->addMonth();
+            $subscription->save();
+
+            $subscriptionService->createTenant($subscription);
+
+            $subscription->payments()->create([
+                'payment_method' => 'manual',
+                'amount' => $subscription->plan->price,
+                'status' => 'succeeded',
+            ]);
+
+            session()->forget('pending_subscription_id');
+            return view('landing.success', ['subscription' => $subscription]);
+        }
+
         $paymentId = $request->get('payment_id');
 
         if ($paymentId) {
