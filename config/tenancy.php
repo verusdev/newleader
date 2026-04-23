@@ -3,13 +3,22 @@
 declare(strict_types=1);
 
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenant;
 
 return [
     'tenant_model' => Tenant::class,
     'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
 
     'domain_model' => Domain::class,
+
+    /**
+     * Tenancy identification.
+     */
+    'identification' => [
+        'path' => [
+            'path' => 'tenant',
+        ],
+    ],
 
     /**
      * The list of domains hosting your central app.
@@ -30,7 +39,10 @@ return [
     'bootstrappers' => [
         Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
         Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
+        // Filesystem tenancy is not needed for the current CRM demo and can
+        // break public pages when no tenant-specific disks were bootstrapped.
+        // Enable it later when tenant file uploads are implemented.
+        // Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
         Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
         // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class, // Note: phpredis is needed
     ],

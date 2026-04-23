@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use YooKassa\Client;
+use YooKassa\Client\CurlClient;
 use App\Models\Subscription;
 use App\Models\CentralPayment;
 use App\Models\CentralSubscriptionPlan;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +20,11 @@ class SubscriptionService
         $shopId = config('services.yookassa.shop_id');
         $secretKey = config('services.yookassa.secret_key');
 
-        $this->client = new Client($shopId, $secretKey);
+        $curlClient = new CurlClient();
+        $curlClient->setShopId($shopId);
+        $curlClient->setShopPassword($secretKey);
+
+        $this->client = new Client($curlClient);
     }
 
     public function createSubscriptionPayment(Subscription $subscription, string $returnUrl): ?array

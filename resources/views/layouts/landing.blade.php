@@ -27,7 +27,7 @@
                     <a href="{{ route('landing.index') }}" class="nav-link">Тарифы</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.tenants.index') }}" class="nav-link">Админ</a>
+                    <a href="{{ global_asset('admin/tenants') }}" class="nav-link">Админ</a>
                 </li>
             </ul>
         </div>
