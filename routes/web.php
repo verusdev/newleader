@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PublicInvitationController;
 use App\Http\Controllers\PublicHostLandingController;
 use App\Http\Controllers\Central\TenantController;
 use App\Http\Controllers\Central\SubscriptionController;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing.index');
 Route::get('/hosts/{tenant}', [PublicHostLandingController::class, 'show'])->name('hosts.show');
+Route::get('/invite/{tenant}/{eventToken}/{guestToken?}', [PublicInvitationController::class, 'show'])->name('invitation.show');
+Route::post('/invite/{tenant}/{eventToken}/rsvp/{guestToken?}', [PublicInvitationController::class, 'submitRsvp'])->name('invitation.rsvp');
 
 Route::prefix('landing')->name('landing.')->group(function () {
     Route::get('/checkout/{plan}', [LandingController::class, 'checkout'])->name('checkout');

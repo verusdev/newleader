@@ -19,32 +19,59 @@
             </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-hover table-head-fixed">
-                    <thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Категория</th><th>Подтверждён</th><th>+1</th><th>Действия</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Email</th>
+                            <th>Телефон</th>
+                            <th>Категория</th>
+                            <th>RSVP</th>
+                            <th>+1</th>
+                            <th>Персональная ссылка</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse($guests as $guest)
+                            @php
+                                $guestInvitationUrl = route('invitation.show', [
+                                    'tenant' => tenant('id'),
+                                    'eventToken' => $event->invitation_token,
+                                    'guestToken' => $guest->invitation_token,
+                                ]);
+                            @endphp
                             <tr>
                                 <td>{{ $guest->name }}</td>
-                                <td>{{ $guest->email ?? '—' }}</td>
-                                <td>{{ $guest->phone ?? '—' }}</td>
-                                <td>{{ $guest->category ?? '—' }}</td>
+                                <td>{{ $guest->email ?: '-' }}</td>
+                                <td>{{ $guest->phone ?: '-' }}</td>
+                                <td>{{ $guest->category ?: '-' }}</td>
                                 <td>
-                                    @if($guest->confirmed)
-                                        <span class="badge badge-success"><i class="fas fa-check"></i></span>
+                                    @if($guest->rsvp_status === 'confirmed')
+                                        <span class="badge badge-success">Будет</span>
+                                    @elseif($guest->rsvp_status === 'declined')
+                                        <span class="badge badge-danger">Не сможет</span>
+                                    @elseif($guest->confirmed)
+                                        <span class="badge badge-success">Подтверждён</span>
                                     @else
-                                        <span class="badge badge-danger"><i class="fas fa-times"></i></span>
+                                        <span class="badge badge-secondary">Нет ответа</span>
                                     @endif
                                 </td>
                                 <td>{{ $guest->plus_one }}</td>
+                                <td style="min-width: 240px;">
+                                    <input type="text" class="form-control form-control-sm" value="{{ $guestInvitationUrl }}" readonly onclick="this.select();">
+                                </td>
                                 <td>
+                                    <a href="{{ $guestInvitationUrl }}" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-external-link-alt"></i></a>
                                     <a href="{{ route('tenant.guests.edit', [$event, $guest]) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                    <form action="{{ route('tenant.guests.destroy', [$event, $guest]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
-                                        @csrf @method('DELETE')
+                                    <form action="{{ route('tenant.guests.destroy', [$event, $guest]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить гостя?')">
+                                        @csrf
+                                        @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted py-4">Гости не найдены</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-4">Гости не найдены</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -4,6 +4,26 @@
 @section('page-title', $event->title)
 
 @section('content')
+@php
+    $typeLabels = [
+        'wedding' => 'Свадьба',
+        'birthday' => 'День рождения',
+        'graduation' => 'Выпускной',
+        'corporate' => 'Корпоратив',
+        'anniversary' => 'Юбилей',
+        'other' => 'Другое',
+    ];
+
+    $statusLabels = [
+        'planning' => 'Планирование',
+        'confirmed' => 'Подтверждено',
+        'completed' => 'Завершено',
+        'cancelled' => 'Отменено',
+    ];
+
+    $invitationUrl = route('invitation.show', ['tenant' => tenant('id'), 'eventToken' => $event->invitation_token]);
+@endphp
+
 <div class="row">
     <div class="col-md-4">
         <div class="card">
@@ -13,15 +33,10 @@
             <div class="card-body">
                 <dl class="row">
                     <dt class="col-sm-5">Клиент</dt>
-                    <dd class="col-sm-7">{{ $event->client?->name ?? '—' }}</dd>
+                    <dd class="col-sm-7">{{ $event->client?->name ?: '-' }}</dd>
 
                     <dt class="col-sm-5">Тип</dt>
-                    <dd class="col-sm-7">
-                        @php
-                            $typeLabels = ['wedding'=>'Свадьба','birthday'=>'День рождения','graduation'=>'Выпускной','corporate'=>'Корпоратив','anniversary'=>'Юбилей','other'=>'Другое'];
-                        @endphp
-                        {{ $typeLabels[$event->type] ?? $event->type }}
-                    </dd>
+                    <dd class="col-sm-7">{{ $typeLabels[$event->type] ?? $event->type }}</dd>
 
                     <dt class="col-sm-5">Дата</dt>
                     <dd class="col-sm-7">{{ $event->event_date->format('d.m.Y') }}</dd>
@@ -32,7 +47,7 @@
                     @endif
 
                     @if($event->venue_name)
-                        <dt class="col-sm-5">Место</dt>
+                        <dt class="col-sm-5">Площадка</dt>
                         <dd class="col-sm-7">{{ $event->venue_name }}</dd>
                     @endif
 
@@ -40,13 +55,10 @@
                     <dd class="col-sm-7">{{ $event->expected_guests }}</dd>
 
                     <dt class="col-sm-5">Бюджет</dt>
-                    <dd class="col-sm-7">{{ number_format($event->budget_total, 2) }} ₽</dd>
+                    <dd class="col-sm-7">{{ number_format((float) $event->budget_total, 2) }} ₽</dd>
 
                     <dt class="col-sm-5">Статус</dt>
                     <dd class="col-sm-7">
-                        @php
-                            $statusLabels = ['planning'=>'Планирование','confirmed'=>'Подтверждено','completed'=>'Завершено','cancelled'=>'Отменено'];
-                        @endphp
                         <span class="badge badge-info">{{ $statusLabels[$event->status] ?? $event->status }}</span>
                     </dd>
                 </dl>
@@ -60,6 +72,19 @@
                 <a href="{{ route('tenant.events.edit', $event) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Редактировать</a>
             </div>
         </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-envelope-open-text mr-2"></i>Лендинг-приглашение</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Публичная ссылка для приглашения гостей и сбора RSVP:</p>
+                <input type="text" class="form-control mb-3" value="{{ $invitationUrl }}" readonly onclick="this.select();">
+                <a href="{{ $invitationUrl }}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fas fa-external-link-alt mr-1"></i> Открыть приглашение
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-8">
@@ -68,7 +93,7 @@
                 <div class="small-box bg-info">
                     <div class="inner">
                         <h3>{{ $event->guests->count() }}/{{ $event->expected_guests }}</h3>
-                        <p>Гостей (подтверждено: {{ $event->guests->where('confirmed', true)->count() }})</p>
+                        <p>Гостей (подтвердили: {{ $event->guests->where('confirmed', true)->count() }})</p>
                     </div>
                     <a href="{{ route('tenant.guests.index', $event) }}" class="small-box-footer">Управлять <i class="fas fa-arrow-circle-right"></i></a>
                 </div>
@@ -88,9 +113,7 @@
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-wallet mr-2"></i>Бюджет</h3>
                 <div class="card-tools">
-                    <a href="{{ route('tenant.budget.index', $event) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i>
-                    </a>
+                    <a href="{{ route('tenant.budget.index', $event) }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i></a>
                 </div>
             </div>
             <div class="card-body">
@@ -98,7 +121,7 @@
                 <div class="progress mb-3" style="height: 25px;">
                     <div class="progress-bar {{ $spent > $event->budget_total ? 'bg-danger' : 'bg-success' }}" role="progressbar"
                         style="width: {{ $event->budget_total > 0 ? ($spent / $event->budget_total * 100) : 0 }}%">
-                        {{ number_format($spent, 0) }} / {{ number_format($event->budget_total, 0) }} ₽
+                        {{ number_format($spent, 0) }} / {{ number_format((float) $event->budget_total, 0) }} ₽
                     </div>
                 </div>
                 <table class="table table-sm">
@@ -107,8 +130,8 @@
                         @forelse($event->budgetItems->take(5) as $item)
                             <tr>
                                 <td>{{ $item->name }}</td>
-                                <td class="text-right">{{ number_format($item->estimated_amount, 2) }} ₽</td>
-                                <td class="text-right">{{ number_format($item->actual_amount, 2) }} ₽</td>
+                                <td class="text-right">{{ number_format((float) $item->estimated_amount, 2) }} ₽</td>
+                                <td class="text-right">{{ number_format((float) $item->actual_amount, 2) }} ₽</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted">Нет статей бюджета</td></tr>
@@ -122,9 +145,7 @@
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-tasks mr-2"></i>Задачи</h3>
                 <div class="card-tools">
-                    <a href="{{ route('tenant.tasks.create', $event) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i>
-                    </a>
+                    <a href="{{ route('tenant.tasks.create', $event) }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i></a>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -134,11 +155,14 @@
                         @forelse($event->tasks->take(5) as $task)
                             <tr>
                                 <td>{{ $task->title }}</td>
-                                <td>{{ $task->due_date ? $task->due_date->format('d.m.Y') : '—' }}</td>
+                                <td>{{ $task->due_date ? $task->due_date->format('d.m.Y') : '-' }}</td>
                                 <td>
-                                    @if($task->status === 'completed')<span class="badge badge-success">Готово</span>
-                                    @elseif($task->status === 'in_progress')<span class="badge badge-warning">В работе</span>
-                                    @else<span class="badge badge-danger">Ожидание</span>
+                                    @if($task->status === 'completed')
+                                        <span class="badge badge-success">Готово</span>
+                                    @elseif($task->status === 'in_progress')
+                                        <span class="badge badge-warning">В работе</span>
+                                    @else
+                                        <span class="badge badge-danger">Ожидание</span>
                                     @endif
                                 </td>
                             </tr>
