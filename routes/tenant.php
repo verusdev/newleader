@@ -23,6 +23,8 @@ Route::middleware([
     Route::resource('events', EventController::class);
 
     Route::resource('clients', ClientController::class);
+    Route::post('clients/{client}/timeline/{step}/toggle', [ClientController::class, 'toggleTimelineStep'])
+        ->name('clients.timeline.toggle');
 
     Route::prefix('events/{event}')->group(function () {
         Route::resource('guests', GuestController::class)->except(['index', 'show']);
