@@ -10,6 +10,9 @@
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Список мероприятий</h3>
                 <div class="card-tools">
+                    <a href="{{ route('tenant.events.calendar') }}" class="btn btn-outline-info btn-sm mr-2">
+                        <i class="fas fa-calendar-week mr-1"></i>Календарь
+                    </a>
                     <a href="{{ route('tenant.events.create') }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus mr-1"></i>Новое мероприятие
                     </a>
@@ -31,7 +34,7 @@
                         @forelse($events as $event)
                             <tr>
                                 <td><a href="{{ route('tenant.events.show', $event) }}">{{ $event->title }}</a></td>
-                                <td>{{ $event->client?->name ?? '—' }}</td>
+                                <td>{{ $event->client?->name ?: '—' }}</td>
                                 <td>
                                     @php
                                         $typeLabels = [
@@ -60,18 +63,12 @@
                                     <span class="badge {{ $st[0] }}">{{ $st[1] }}</span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('tenant.events.show', $event) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('tenant.events.edit', $event) }}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('tenant.events.destroy', $event) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
+                                    <a href="{{ route('tenant.events.show', $event) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                    <a href="{{ route('tenant.events.edit', $event) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('tenant.events.destroy', $event) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить мероприятие?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>

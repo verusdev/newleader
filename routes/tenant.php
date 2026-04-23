@@ -20,6 +20,8 @@ Route::middleware([
 ])->prefix('tenant/{tenant}')->name('tenant.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('events-calendar', [EventController::class, 'calendar'])->name('events.calendar');
+    Route::get('events-calendar/feed', [EventController::class, 'calendarFeed'])->name('events.calendar.feed');
     Route::resource('events', EventController::class);
 
     Route::resource('clients', ClientController::class);

@@ -3,15 +3,47 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
 use App\Models\Client;
+use App\Models\Event;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
+    public function calendar()
+    {
+        return view('tenant.events.calendar');
+    }
+
+    public function calendarFeed()
+    {
+        $events = Event::with('client')
+            ->orderBy('event_date')
+            ->get()
+            ->map(function (Event $event) {
+                return [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'start' => trim($event->event_date->format('Y-m-d') . ' ' . ($event->event_time ?? '00:00:00')),
+                    'end' => trim($event->event_date->format('Y-m-d') . ' ' . ($event->event_time ?? '23:59:59')),
+                    'url' => route('tenant.events.show', $event),
+                    'backgroundColor' => $this->statusColor($event->status),
+                    'borderColor' => $this->statusColor($event->status),
+                    'extendedProps' => [
+                        'client' => $event->client?->name,
+                        'status' => $event->status,
+                        'type' => $event->type,
+                        'venue' => $event->venue_name,
+                    ],
+                ];
+            });
+
+        return response()->json($events);
+    }
+
     public function index()
     {
         $events = Event::with('client')->latest()->paginate(15);
+
         return view('tenant.events.index', compact('events'));
     }
 
@@ -19,6 +51,7 @@ class EventController extends Controller
     {
         $clients = Client::all();
         $types = ['wedding', 'birthday', 'graduation', 'corporate', 'anniversary', 'other'];
+
         return view('tenant.events.create', compact('clients', 'types'));
     }
 
@@ -38,12 +71,14 @@ class EventController extends Controller
         ]);
 
         Event::create($validated);
+
         return redirect()->route('tenant.events.index')->with('success', 'Мероприятие создано');
     }
 
     public function show(Event $event)
     {
         $event->load(['client', 'guests', 'tasks', 'budgetItems.vendor']);
+
         return view('tenant.events.show', compact('event'));
     }
 
@@ -51,6 +86,7 @@ class EventController extends Controller
     {
         $clients = Client::all();
         $types = ['wedding', 'birthday', 'graduation', 'corporate', 'anniversary', 'other'];
+
         return view('tenant.events.edit', compact('event', 'clients', 'types'));
     }
 
@@ -71,12 +107,24 @@ class EventController extends Controller
         ]);
 
         $event->update($validated);
+
         return redirect()->route('tenant.events.show', $event)->with('success', 'Мероприятие обновлено');
     }
 
     public function destroy(Event $event)
     {
         $event->delete();
+
         return redirect()->route('tenant.events.index')->with('success', 'Мероприятие удалено');
+    }
+
+    private function statusColor(string $status): string
+    {
+        return match ($status) {
+            'confirmed' => '#28a745',
+            'completed' => '#17a2b8',
+            'cancelled' => '#dc3545',
+            default => '#ffc107',
+        };
     }
 }

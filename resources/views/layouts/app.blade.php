@@ -46,15 +46,21 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('tenant.events.index') }}" class="nav-link {{ request()->routeIs('tenant.events.*') ? 'active' : '' }}">
+                    <a href="{{ route('tenant.events.index') }}" class="nav-link {{ request()->routeIs('tenant.events.*') && ! request()->routeIs('tenant.events.calendar*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-calendar-alt"></i>
                         <p>Мероприятия</p>
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('tenant.events.calendar') }}" class="nav-link {{ request()->routeIs('tenant.events.calendar*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-calendar-week"></i>
+                        <p>Календарь</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('tenant.clients.index') }}" class="nav-link {{ request()->routeIs('tenant.clients.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-users"></i>
-                        <p>Клиенты</p>
+                        <p>Лиды и клиенты</p>
                     </a>
                 </li>
                 <li class="nav-item">
