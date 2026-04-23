@@ -2,33 +2,38 @@
 
 ## Обзор
 
-Система разделена на три логические части:
+Система разделена на четыре логические части:
 
-1. Центральное приложение
-2. Tenant CRM
-3. Публичный лендинг ведущего
+1. central приложение;
+2. tenant CRM;
+3. публичный лендинг ведущего;
+4. публичный invitation landing мероприятия.
 
-Проект использует `stancl/tenancy` по схеме: одна центральная база и одна отдельная база на каждого tenant-а.
+Проект использует `stancl/tenancy` по схеме: одна central база и одна отдельная база на каждого tenant-а.
 
-## Центральное приложение
+## Central приложение
 
-Центральная часть отвечает за:
+Central часть отвечает за:
 
-- маркетинговый лендинг
-- оформление подписки
-- callback и webhook платежей
-- администрирование tenant-ов
-- администрирование подписок
+- SaaS-лендинг;
+- оформление подписки;
+- callback и webhook платежей;
+- управление tenant-ами;
+- управление подписками.
 
-Central HTTP routes описаны в [../routes/web.php](../routes/web.php).
-
-Основные центральные сущности:
+Основные central сущности:
 
 - `Tenant`
 - `Domain`
 - `Subscription`
-- `CentralSubscriptionPlan`
-- `CentralPayment`
+- `SubscriptionPlan`
+
+Основные файлы:
+
+- [../routes/web.php](../routes/web.php)
+- [../app/Http/Controllers/LandingController.php](../app/Http/Controllers/LandingController.php)
+- [../app/Http/Controllers/Central/TenantController.php](../app/Http/Controllers/Central/TenantController.php)
+- [../app/Http/Controllers/Central/SubscriptionController.php](../app/Http/Controllers/Central/SubscriptionController.php)
 
 ## Tenant CRM
 
@@ -36,44 +41,146 @@ Tenant CRM доступна по пути:
 
 `/tenant/{tenant-id}`
 
-Инициализация tenancy выполняется через `InitializeTenancyByPath`.
+Tenancy инициализируется через `InitializeTenancyByPath`.
 
-Внутри tenant CRM сейчас есть:
+Сейчас внутри tenant CRM есть:
 
-- дашборд
-- мероприятия
-- клиенты
-- гости
-- задачи
-- бюджет
-- подрядчики
+- дашборд;
+- лиды и клиенты;
+- pipeline и таймлайн сделки;
+- мероприятия;
+- календарь мероприятий;
+- гости;
+- задачи;
+- бюджет;
+- подрядчики.
 
 Tenant-маршруты описаны в [../routes/tenant.php](../routes/tenant.php).
 
-Хранилище tenant-данных:
+## Логика лида и клиента
 
-- у каждого tenant-а отдельный SQLite файл
-- формат имени базы: `tenant{tenant-id}`
-- tenant-миграции лежат в [../database/migrations/tenant](../database/migrations/tenant)
+В проекте лид и клиент живут в одной сущности `Client`.
+
+Принцип работы:
+
+- новый контакт создаётся как `lead`;
+- уже при создании фиксируется бриф по конкретному мероприятию;
+- создаётся набор timeline steps;
+- по завершении этапа `contract_signed` контакт автоматически становится `client`.
+
+Таймлайн хранится в:
+
+- [../app/Models/Client.php](../app/Models/Client.php)
+- [../app/Models/ClientTimelineStep.php](../app/Models/ClientTimelineStep.php)
+
+Основной контроллер:
+
+- [../app/Http/Controllers/Tenant/ClientController.php](../app/Http/Controllers/Tenant/ClientController.php)
+
+## Мероприятия
+
+Каждое мероприятие связано с клиентом или лидом и хранит:
+
+- название;
+- тип;
+- дату и время;
+- площадку и адрес;
+- ожидаемое число гостей;
+- бюджет;
+- описание;
+- статус;
+- `invitation_token`.
+
+События отображаются:
+
+- в списке мероприятий;
+- в календаре;
+- в карточке клиента;
+- в публичном invitation landing.
+
+Основные файлы:
+
+- [../app/Models/Event.php](../app/Models/Event.php)
+- [../app/Http/Controllers/Tenant/EventController.php](../app/Http/Controllers/Tenant/EventController.php)
+- [../resources/views/tenant/events/calendar.blade.php](../resources/views/tenant/events/calendar.blade.php)
+
+## Гости и RSVP
+
+Гости принадлежат конкретному мероприятию.
+
+Для гостя сейчас доступны:
+
+- имя;
+- email;
+- телефон;
+- категория;
+- подтверждение;
+- `rsvp_status`;
+- `responded_at`;
+- `plus_one`;
+- `notes`;
+- `invitation_token`.
+
+Механика RSVP:
+
+- у события есть общий invitation URL;
+- у гостя есть персональная invitation URL;
+- RSVP отправляется через публичную форму;
+- ответ сохраняется в tenant CRM.
+
+Основные файлы:
+
+- [../app/Models/Guest.php](../app/Models/Guest.php)
+- [../app/Http/Controllers/PublicInvitationController.php](../app/Http/Controllers/PublicInvitationController.php)
+- [../resources/views/landing/invitation/show.blade.php](../resources/views/landing/invitation/show.blade.php)
+- [../resources/views/tenant/guests/index.blade.php](../resources/views/tenant/guests/index.blade.php)
 
 ## Публичный лендинг ведущего
 
-У каждого tenant-а есть отдельная публичная страница:
+У каждого tenant-а есть отдельная публичная promo-страница:
 
 `/hosts/{tenant-id}`
 
-Эта страница:
+Страница:
 
-- находит tenant в центральной базе
-- инициализирует tenant-контекст
-- читает статистику из tenant-базы
-- рендерит один из шаблонов дизайна
+- находит tenant в central базе;
+- инициализирует tenant-контекст;
+- читает tenant-статистику;
+- рендерит один из шаблонов дизайна.
 
-Ключевой файл:
+Доступные шаблоны:
+
+- `classic`
+- `editorial`
+- `neon`
+
+Основные файлы:
 
 - [../app/Http/Controllers/PublicHostLandingController.php](../app/Http/Controllers/PublicHostLandingController.php)
+- [../app/Models/Tenant.php](../app/Models/Tenant.php)
+- [../resources/views/landing/hosts/templates](../resources/views/landing/hosts/templates)
 
-## Конфигурация tenancy
+## Invitation landing мероприятия
+
+У каждого мероприятия есть публичная страница приглашения:
+
+- `/invite/{tenant}/{eventToken}`
+- `/invite/{tenant}/{eventToken}/{guestToken}`
+
+Эта страница:
+
+- находит tenant в central базе;
+- инициализирует tenant-контекст;
+- находит событие по `invitation_token`;
+- при наличии `guestToken` находит конкретного гостя;
+- отображает публичную страницу мероприятия;
+- принимает RSVP через POST.
+
+Важно:
+
+- tenant-контекст должен жить до конца рендера Blade, иначе Eloquent casts могут потребовать соединение `tenant` после `tenancy()->end()`.
+
+## Tenancy configuration
 
 Основная конфигурация находится в:
 
@@ -81,45 +188,41 @@ Tenant-маршруты описаны в [../routes/tenant.php](../routes/tenan
 
 Текущее состояние:
 
-- path identification включён
-- database bootstrapper включён
-- cache bootstrapper включён
-- queue bootstrapper включён
-- filesystem bootstrapper отключён для текущего демо
+- path identification включён;
+- database bootstrapper включён;
+- cache bootstrapper включён;
+- queue bootstrapper включён;
+- filesystem bootstrapper отключён для текущего demo.
 
-## Метаданные tenant-а
+## Хранение данных
 
-Кастомная модель tenant-а хранится в центральной базе и расширяет базовую модель `stancl/tenancy`.
+Central БД:
 
-Дополнительные атрибуты лежат в JSON-колонке `data`:
+- `database/database.sqlite`
 
-- `name`
-- `email`
-- `landing_template`
+Tenant БД:
 
-Ключевой файл:
+- `database/tenant{tenant-id}`
 
-- [../app/Models/Tenant.php](../app/Models/Tenant.php)
+Tenant миграции:
 
-## Генерация tenant-маршрутов
+- [../database/migrations/tenant](../database/migrations/tenant)
 
-В tenant CRM используется middleware, которое автоматически подставляет текущий tenant ID в генерацию ссылок внутри tenant-представлений.
+## Demo-наполнение
 
-Ключевой файл:
+Для воспроизводимого наполнения tenant БД используется:
 
-- [../app/Http/Middleware/SetTenantRouteParameter.php](../app/Http/Middleware/SetTenantRouteParameter.php)
+- [../scripts/refresh_demo_data.php](../scripts/refresh_demo_data.php)
 
-## Платёжный сценарий
+Скрипт:
 
-Логика подписок и платежей сосредоточена в:
-
-- [../app/Http/Controllers/LandingController.php](../app/Http/Controllers/LandingController.php)
-- [../app/Services/SubscriptionService.php](../app/Services/SubscriptionService.php)
-
-В локальном режиме, если YooKassa credentials оставлены в demo-значении, активация подписки выполняется автоматически без реального платежа.
+- очищает tenant-данные;
+- создаёт корректные русские demo-сущности;
+- наполняет лиды, клиентов, мероприятия, гостей, задачи, бюджет и подрядчиков.
 
 ## Эксплуатационные заметки
 
-- Tenant DB файлы относятся к окружению и не должны коммититься.
-- Публичный лендинг не падает, если tenant-база отсутствует, а рендерится с пустой статистикой.
-- Таблица `sessions` добавлена в tenant-миграции, потому что приложение сейчас использует `SESSION_DRIVER=database`.
+- Tenant SQLite-файлы относятся к данным окружения и не должны коммититься.
+- Публичный host landing устойчив к отсутствующей tenant БД.
+- Invitation landing зависит от корректной tenant БД и invite token-ов.
+- Для локального показа path-based tenancy проще и надёжнее, чем subdomain tenancy.

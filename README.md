@@ -1,12 +1,14 @@
 # Event CRM
 
-Мультитенантная SaaS CRM для ведущих и организаторов мероприятий. Проект объединяет:
+Мультитенантная SaaS CRM для ведущих и организаторов мероприятий.
 
-- центральный лендинг и биллинг,
-- админку для управления tenant-ами и подписками,
-- tenant CRM для операционной работы,
-- публичный рекламный лендинг каждого ведущего,
-- несколько шаблонов дизайна для такого лендинга.
+Проект объединяет:
+
+- центральный маркетинговый лендинг и оформление подписки;
+- админку для управления tenant-ами и подписками;
+- tenant CRM для ежедневной операционной работы;
+- публичный рекламный лендинг каждого ведущего;
+- публичный лендинг-приглашение для каждого мероприятия с RSVP.
 
 Интерфейс построен на Blade и AdminLTE 3. Мультитенантность реализована через `stancl/tenancy`.
 
@@ -18,64 +20,97 @@
 - `yoomoney/yookassa-sdk-php` `^3.13`
 - Vite `^8`
 - AdminLTE 3
+- SQLite для central и tenant БД в локальном demo-окружении
 
-## Основные зоны продукта
+## Что уже реализовано
 
-### Центральная часть
-
-Центральное приложение работает на основном домене и содержит:
+### Central app
 
 - главный SaaS-лендинг `/`
 - оформление подписки
-- обработку callback и webhook платежей
-- админку tenant-ов `/admin/tenants`
-- админку подписок `/admin/subscriptions`
-
-Маршруты описаны в [routes/web.php](routes/web.php).
+- callback и webhook платежей
+- админка tenant-ов `/admin/tenants`
+- админка подписок `/admin/subscriptions`
 
 ### Tenant CRM
 
-Каждый tenant получает отдельную базу данных и CRM по path tenancy:
+Каждый tenant работает в отдельной БД и открывается по path tenancy:
 
 `/tenant/{tenant-id}`
 
-Tenant-маршруты описаны в [routes/tenant.php](routes/tenant.php).
-
-Текущие разделы CRM:
+В CRM сейчас есть:
 
 - дашборд
+- клиенты и лиды
+- pipeline лида с таймлайном этапов
 - мероприятия
-- клиенты
+- календарь мероприятий
 - гости
 - задачи
 - бюджет
 - подрядчики
 
-### Публичный лендинг ведущего
+### Публичные страницы
 
-У каждого tenant-а есть отдельная рекламная страница:
+- рекламный лендинг ведущего: `/hosts/{tenant-id}`
+- лендинг-приглашение мероприятия: `/invite/{tenant-id}/{eventToken}`
+- персональное приглашение гостя: `/invite/{tenant-id}/{eventToken}/{guestToken}`
 
-`/hosts/{tenant-id}`
+## Бизнес-логика CRM
 
-Эта страница предназначена для продвижения ведущего, презентации услуг и получения лидов. Дизайн можно переключать из админки.
+### Лиды и клиенты
 
-Доступные шаблоны:
+CRM построена вокруг процесса продажи мероприятия:
 
-- `classic`
-- `editorial`
-- `neon`
+1. сначала создаётся лид;
+2. уже на этапе лида фиксируется бриф по конкретному мероприятию;
+3. для лида создаётся таймлайн этапов;
+4. после завершения этапа `contract_signed` лид автоматически становится клиентом.
 
-Шаблоны лежат в [resources/views/landing/hosts/templates](resources/views/landing/hosts/templates).
+Текущие этапы таймлайна:
 
-## Архитектура
+- `incoming_call` — первичный звонок
+- `meeting` — встреча / бриф
+- `contract_signed` — заключение договора
+- `equipment_prep` — подготовка оборудования
+- `event_prep` — финальная подготовка
+- `event_day` — день мероприятия
+- `follow_up` — постконтакт / обратная связь
 
-### Модель мультитенантности
+### Мероприятия
 
-Проект использует `stancl/tenancy` со следующей схемой:
+Мероприятие создаётся уже при появлении лида и содержит:
 
-- центральная база для tenant-ов, доменов, подписок, тарифов и платежей
-- отдельная база на каждого tenant-а
-- path-based идентификация tenant-а через `/tenant/{tenant}`
+- название
+- тип
+- дату
+- время
+- площадку
+- адрес
+- ожидаемое число гостей
+- бюджет
+- комментарий
+
+### Приглашения и RSVP
+
+У каждого мероприятия есть публичный invitation landing.
+
+Возможности:
+
+- общая ссылка на мероприятие для приглашения гостей;
+- персональные ссылки для каждого гостя;
+- форма RSVP прямо на лендинге;
+- сохранение ответа в tenant CRM;
+- поля RSVP: статус ответа, дата ответа, `+1`, комментарий.
+
+## Архитектура tenancy
+
+Проект использует `stancl/tenancy` по схеме:
+
+- одна central SQLite база: `database/database.sqlite`;
+- одна отдельная SQLite база на каждого tenant-а;
+- tenant БД создаются в формате `database/tenant{tenant-id}`;
+- tenant CRM определяется через path-based tenancy.
 
 Ключевые файлы:
 
@@ -84,112 +119,15 @@ Tenant-маршруты описаны в [routes/tenant.php](routes/tenant.php)
 - [app/Models/Tenant.php](app/Models/Tenant.php)
 - [app/Http/Middleware/SetTenantRouteParameter.php](app/Http/Middleware/SetTenantRouteParameter.php)
 
-### Базы данных
+## Публичные шаблоны лендинга ведущего
 
-Центральная SQLite база:
+Для страницы `/hosts/{tenant}` доступны шаблоны:
 
-- `database/database.sqlite`
+- `classic`
+- `editorial`
+- `neon`
 
-Tenant-базы создаются автоматически в формате:
-
-- `database/tenant{tenant-id}`
-
-Tenant-миграции лежат в:
-
-- [database/migrations/tenant](database/migrations/tenant)
-
-Центральные миграции лежат в:
-
-- [database/migrations](database/migrations)
-
-### Метаданные tenant-а
-
-Кастомная модель tenant-а расширяет базовую модель `stancl/tenancy` и хранит дополнительные поля в JSON-колонке `data`.
-
-Примеры:
-
-- `name`
-- `email`
-- `landing_template`
-
-## Основные сценарии
-
-### Сценарий подписки
-
-1. Пользователь открывает `/`
-2. Выбирает тариф
-3. Вводит имя, email и tenant domain
-4. В центральной базе создаётся подписка
-5. Создаётся платёж через YooKassa или выполняется локальная автoактивация
-6. Создаётся tenant
-7. Создаётся и мигрируется tenant-база
-8. Пользователь получает доступ к CRM
-
-Ключевые файлы:
-
-- [app/Http/Controllers/LandingController.php](app/Http/Controllers/LandingController.php)
-- [app/Services/SubscriptionService.php](app/Services/SubscriptionService.php)
-
-### Сценарий управления tenant-ом
-
-Администратор может:
-
-- создать tenant вручную
-- открыть tenant CRM
-- открыть публичный лендинг ведущего
-- сменить шаблон лендинга
-- удалить tenant
-
-Ключевые файлы:
-
-- [app/Http/Controllers/Central/TenantController.php](app/Http/Controllers/Central/TenantController.php)
-- [resources/views/central/tenants/index.blade.php](resources/views/central/tenants/index.blade.php)
-- [resources/views/central/tenants/show.blade.php](resources/views/central/tenants/show.blade.php)
-
-### Сценарий публичного лендинга
-
-Публичная страница:
-
-- находит tenant в центральной базе
-- инициализирует tenant-контекст
-- читает статистику из tenant-базы
-- рендерит выбранный шаблон
-- не падает, даже если tenant-база ещё не создана
-
-Ключевой файл:
-
-- [app/Http/Controllers/PublicHostLandingController.php](app/Http/Controllers/PublicHostLandingController.php)
-
-## Структура проекта
-
-```text
-app/
-  Http/
-    Controllers/
-      Central/
-      Tenant/
-  Models/
-  Providers/
-  Services/
-
-bootstrap/
-config/
-database/
-  migrations/
-  migrations/tenant/
-  seeders/
-
-resources/
-  views/
-    central/
-    landing/
-    tenant/
-    layouts/
-
-routes/
-  web.php
-  tenant.php
-```
+Выбранный шаблон хранится в метаданных tenant-а.
 
 ## Установка
 
@@ -202,7 +140,7 @@ npm install
 
 ### 2. Подготовить окружение
 
-При необходимости скопируйте `.env.example` в `.env`, затем проверьте минимум такие параметры:
+Проверьте минимум такие параметры в `.env`:
 
 ```env
 APP_NAME="Event CRM"
@@ -220,21 +158,21 @@ YOOKASSA_SHOP_ID=your_shop_id
 YOOKASSA_SECRET_KEY=your_secret_key
 ```
 
-### 3. Создать центральную SQLite базу
+### 3. Создать central SQLite базу
 
-Если файл ещё не существует:
+Windows:
 
 ```bash
 type nul > database/database.sqlite
 ```
 
-Для Unix-подобных систем:
+Unix:
 
 ```bash
 touch database/database.sqlite
 ```
 
-### 4. Выполнить миграции и сиды
+### 4. Выполнить миграции и сиды central app
 
 ```bash
 php artisan migrate
@@ -253,9 +191,37 @@ php artisan serve
 npm run dev
 ```
 
+## Demo-данные
+
+Для локального demo-наполнения tenant БД есть скрипт:
+
+- [scripts/refresh_demo_data.php](scripts/refresh_demo_data.php)
+
+Запуск:
+
+```bash
+php scripts/refresh_demo_data.php
+```
+
+Скрипт:
+
+- обновляет имена demo tenant-ов;
+- очищает tenant-данные;
+- создаёт корректные русские demo-данные;
+- наполняет лиды, клиентов, мероприятия, гостей, задачи, бюджет и подрядчиков;
+- создаёт demo-ссылки для публичных лендингов и RSVP.
+
 ## Полезные команды
 
-Из [composer.json](composer.json):
+```bash
+php artisan test
+npm run build
+php artisan route:list
+php artisan tenants:migrate
+php scripts/refresh_demo_data.php
+```
+
+Из `composer.json`:
 
 ```bash
 composer run setup
@@ -263,65 +229,45 @@ composer run dev
 composer run test
 ```
 
-Запуск тестов:
-
-```bash
-php artisan test
-```
-
-Сборка фронтенда:
-
-```bash
-npm run build
-```
-
-## Демо URL
+## Demo URL
 
 При локальном запуске на `127.0.0.1:8000`:
 
-- главный лендинг: `http://127.0.0.1:8000/`
-- список tenant-ов: `http://127.0.0.1:8000/admin/tenants`
-- список подписок: `http://127.0.0.1:8000/admin/subscriptions`
+- SaaS-лендинг: `http://127.0.0.1:8000/`
+- tenant admin: `http://127.0.0.1:8000/admin/tenants`
+- subscriptions admin: `http://127.0.0.1:8000/admin/subscriptions`
 
-Пример tenant CRM:
+Примеры:
 
-- `http://127.0.0.1:8000/tenant/96786bbd-3a80-4f1f-95c0-c39947c15b46`
+- CRM Ирины: `http://127.0.0.1:8000/tenant/906a4463-2114-4c3d-aa8d-d198c7727be9`
+- лендинг Ирины: `http://127.0.0.1:8000/hosts/906a4463-2114-4c3d-aa8d-d198c7727be9`
+- CRM Алексея: `http://127.0.0.1:8000/tenant/96786bbd-3a80-4f1f-95c0-c39947c15b46`
+- лендинг Алексея: `http://127.0.0.1:8000/hosts/96786bbd-3a80-4f1f-95c0-c39947c15b46`
 
-Пример публичного лендинга ведущего:
+Invitation examples:
 
-- `http://127.0.0.1:8000/hosts/96786bbd-3a80-4f1f-95c0-c39947c15b46`
-
-## Шаблоны лендинга ведущего
-
-Шаблон выбирается из админки tenant-а.
-
-Текущие варианты:
-
-- `classic` — спокойная премиальная подача
-- `editorial` — журнальная, более статусная визуальная подача
-- `neon` — яркий промо-лендинг для активной рекламы
-
-Выбранный шаблон хранится в метаданных tenant-а и определяется через [app/Models/Tenant.php](app/Models/Tenant.php).
+- общее приглашение мероприятия: `http://127.0.0.1:8000/invite/{tenant-id}/{eventToken}`
+- персональное приглашение гостя: `http://127.0.0.1:8000/invite/{tenant-id}/{eventToken}/{guestToken}`
 
 ## Технические заметки
 
-- Сейчас используется path tenancy, а не subdomain tenancy.
-- Filesystem tenancy bootstrapper специально отключён в [config/tenancy.php](config/tenancy.php), потому что в текущем демо tenant-загрузки файлов не используются, а bootstrapper вызывал ошибки на публичных страницах.
-- Публичные лендинги ведущих устойчивы к отсутствующей tenant-базе и в этом случае рендерятся с пустой статистикой.
-- Tenant SQLite-файлы являются данными окружения и игнорируются через `/database/tenant*`.
-- В кодовой базе ещё могут встречаться старые файлы со смешанной историей кодировки русского текста. Новая документация и обновлённые админские экраны записаны в UTF-8.
+- Используется path tenancy, а не subdomain tenancy.
+- Filesystem tenancy bootstrapper отключён в [config/tenancy.php](config/tenancy.php), чтобы не ломать публичные страницы в текущем demo-режиме.
+- Публичный лендинг ведущего устойчив к отсутствующей tenant БД и в таком случае рендерится с пустой статистикой.
+- Публичный invitation landing требует активного tenant-контекста до завершения рендера Blade.
+- Tenant SQLite-файлы относятся к данным окружения и не должны храниться в репозитории.
 
-## Важные файлы
+## Ключевые файлы
 
-- bootstrap приложения: [bootstrap/app.php](bootstrap/app.php)
-- провайдеры: [bootstrap/providers.php](bootstrap/providers.php)
-- central routes: [routes/web.php](routes/web.php)
-- tenant routes: [routes/tenant.php](routes/tenant.php)
-- tenancy config: [config/tenancy.php](config/tenancy.php)
-- сервис подписок: [app/Services/SubscriptionService.php](app/Services/SubscriptionService.php)
-- контроллер публичного лендинга: [app/Http/Controllers/PublicHostLandingController.php](app/Http/Controllers/PublicHostLandingController.php)
-- админский контроллер tenant-ов: [app/Http/Controllers/Central/TenantController.php](app/Http/Controllers/Central/TenantController.php)
-- модель tenant-а: [app/Models/Tenant.php](app/Models/Tenant.php)
+- [routes/web.php](routes/web.php)
+- [routes/tenant.php](routes/tenant.php)
+- [config/tenancy.php](config/tenancy.php)
+- [app/Http/Controllers/PublicHostLandingController.php](app/Http/Controllers/PublicHostLandingController.php)
+- [app/Http/Controllers/PublicInvitationController.php](app/Http/Controllers/PublicInvitationController.php)
+- [app/Http/Controllers/Tenant/ClientController.php](app/Http/Controllers/Tenant/ClientController.php)
+- [app/Http/Controllers/Tenant/EventController.php](app/Http/Controllers/Tenant/EventController.php)
+- [app/Models/Tenant.php](app/Models/Tenant.php)
+- [scripts/refresh_demo_data.php](scripts/refresh_demo_data.php)
 
 ## Дополнительная документация
 
