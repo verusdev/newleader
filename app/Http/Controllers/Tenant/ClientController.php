@@ -155,6 +155,22 @@ class ClientController extends Controller
             ->with('success', 'Этап обновлён');
     }
 
+    public function updateTimelineStepNotes(Request $request, Client $client, ClientTimelineStep $step)
+    {
+        abort_unless($step->client_id === $client->id, 404);
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:5000',
+        ]);
+
+        $step->update([
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->route('tenant.clients.show', $client)
+            ->with('success', 'Примечание к этапу сохранено');
+    }
+
     private function eventTypes(): array
     {
         return [

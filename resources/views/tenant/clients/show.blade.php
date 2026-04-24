@@ -135,6 +135,26 @@
                                             {{ $step->completed_at ? 'Вернуть в работу' : 'Завершить этап' }}
                                         </button>
                                     </form>
+                                    <form action="{{ route('tenant.clients.timeline.notes', [$client, $step]) }}" method="POST" class="mt-3">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="form-group mb-2">
+                                            <label for="timeline-notes-{{ $step->id }}" class="small text-muted mb-1">Примечание к этапу</label>
+                                            <textarea
+                                                name="notes"
+                                                id="timeline-notes-{{ $step->id }}"
+                                                class="form-control form-control-sm @error('notes') is-invalid @enderror"
+                                                rows="2"
+                                                placeholder="Добавьте комментарий, договорённости или следующий шаг"
+                                            >{{ old('notes', $step->notes) }}</textarea>
+                                            @error('notes')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-save mr-1"></i> Сохранить примечание
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
