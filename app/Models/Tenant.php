@@ -15,6 +15,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'classic' => 'Классический',
         'editorial' => 'Премиальный журнал',
         'neon' => 'Яркий неон',
+        'festival' => 'Фестиваль красок',
+        'velvet' => 'Бархатная сцена',
     ];
 
     public function landingTemplate(): string
